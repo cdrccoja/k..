@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Bubba!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r133/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #1e1b29;
+            font-family: 'Quicksand', sans-serif;
+            color: #fffdec;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            display: block;
+        }
+        #confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            z-index: 1; 
+        }
+        #spotify-wrapper {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            width: 300px;
+            z-index: 100;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+            border-radius: 12px;
+        }
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+            transition: opacity 1s ease-in-out;
+        }
+        .screen.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .screen.active {
+            opacity: 1;
+        }
+        #landing-screen {
+            justify-content: center;
+        }
+        .glow-text, .title-animation {
+            font-family: 'Dancing Script', cursive;
+            font-size: 5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 235, 178, 0.6);
+            margin-top: 40px;
+            text-align: center;
+            z-index: 20;
+        }
+        
+        .title-animation {
+            transition: all 1.2s ease-in-out;
+            cursor: pointer;
+        }
+        .title-animation:hover {
+            transform: scale(1.02);
+            text-shadow: 0 0 20px rgba(255, 235, 178, 0.8);
+        }
+        .title-animation.shrink {
+            font-size: 4rem;
+            margin-top: 15px;
+            text-shadow: 0 0 5px rgba(255, 235, 178, 0.4);
+        }
+
+        #fountain-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .fountain-item {
+            position: absolute;
+            bottom: -20%;
+            left: 50%;
+            transform: translate(-50%, 0) scale(0);
+            animation: burstUp 2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes burstUp {
+            0% {
+                bottom: -20%;
+                left: 50%;
+                transform: translate(-50%, 0) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            15% { opacity: 1; }
+            100% {
+                bottom: var(--final-y);
+                left: var(--final-x);
+                transform: translate(-50%, -50%) scale(var(--final-scale)) rotate(var(--final-rot));
+                opacity: var(--final-opacity);
+            }
+        }
+        .fountain-item.polaroid {
+            background: #fff;
+            padding: 6px 6px 20px 6px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.6);
+        }
+        .fountain-item.polaroid img {
+            width: var(--polaroid-size, 100px);
+            height: var(--polaroid-size, 100px);
+            object-fit: cover;
+            display: block;
+        }
+        #menu-options {
+            opacity: 0;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 10vw;
+            z-index: 10;
+            width: 100%;
+            margin-top: auto;
+            margin-bottom: 12vh;
+        }
+        #menu-options.show {
+            opacity: 1;
+            transition: opacity 1.5s ease-in-out;
+        }
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            cursor: pointer;
+            transition: transform 0.3s;
+            height: 250px; 
+            width: 250px;
+        }
+        .menu-item:hover {
+            transform: scale(1.08);
+        }
+        .menu-label {
+            font-family: 'Quicksand', sans-serif;
+            color: #ffe6c7;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 15px;
+            text-shadow: 0 5px 10px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        
+        .winged-wrapper {
+            position: relative;
+            transform: scale(0.45);
+            width: 320px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .env-wing {
+             background: white;
+             border-radius: 12px 20px 60px 20px;
+             width: 120px;
+             height: 50px; 
+             margin-top: 80px;
+             position: absolute;
+        }
+        .env-right {
+            margin-left: -60px;
+            left: 50%;
+            animation: flap1 1s infinite;
+            border-bottom: 3px solid rgba(0,0,0,.08);
+            border-radius: 12px 20px 60px 20px;
+            transform: rotate(-10deg) translate(250px,0);
+        }
+        @keyframes flap1 {
+            0% { transform: rotate(-10deg) translate(250px,0); }
+            50% { transform: rotate(-5deg) translate(250px,0); }
+        }
+        .env-right:before {
+            position: absolute;
+            content: '';
+            background: white;
+            width: 70%;
+            height: 70%;
+            border-bottom: 3px solid rgba(0,0,0,.08);
+            border-radius: 20px 20px 60px 20px;
+            transform: rotate(20deg) translate(-1px,0);
+            margin-top: 38px;
+        }
+        .env-right:after {
+            position: absolute;
+            content: '';
+            background: white;
+            width: 40%;
+            transform: rotate(29deg) translate(-8px,0);
+            height: 30%;
+            border-bottom: 3px solid rgba(0,0,0,.08);
+            border-radius: 0px 0px 60px 70px;
+            margin-top: 66px;
+        }
+        .env-left {
+            border-radius: 12px 20px 20px 60px;
+            margin-left: -60px;
+            left: 50%;
+            animation: flap2 1s infinite;
+            border-bottom: 3px solid rgba(0,0,0,.08);
+            transform: rotate(10deg) translate(-248px, 0);
+        }
+        @keyframes flap2 {
+            0% { transform: rotate(10deg) translate(-248px,0); }
+            50% { transform: rotate(5deg) translate(-248px,0); }
+        }
+        .env-left:before {
+            position: absolute;
+            content: '';
+            background: white;
+            width: 70%;
+            border-bottom: 3px solid rgba(0,0,0,.08);
+            transform: translate(46%,0) rotate(-20deg);
+            height: 60%;
+            border-radius: 12px 20px 70px 70px;
+            margin-top: 40px;
+        }
+        .env-left:after {
+            position: absolute;
+            content: '';
+            background: white;
+            width: 40%;
+            border-bottom: 3px solid rgba(0,0,0,.08);
+            height: 30%;
+            transform: translate(164%,0) rotate(-34deg);
+            border-radius: 0px 0px 70px 60px;
+            margin-top: 58px;
+        }
+        .env-heart {
+            position: absolute;
+            width: 120px;
+            z-index: 99999;
+            height: 100px;
+            margin-left: -50px;
+            left: 50%;
+            animation: heartAnim 1s infinite;
+            transform: scale(.8);
+            transition: .6s;
+            margin-top: 60px;
+        }
+        .env-heart:before,
+        .env-heart:after {
+            content: "";
+            width: 50px;
+            height: 80px;
+            position: absolute;
+            left: 50px;
+            top: 0;
+            border-radius: 50px 50px 6px 6px;
+            background: crimson;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+        .env-heart:after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin :100% 100%;
+        }
+        @keyframes heartAnim {
+            0% { transform: scale(.8) translate(0,0); }
+            50% { transform: scale(.92) translate(0, 12px); }
+            100% { transform: scale(.8); }
+        }
+        #env-custom {
+            background: white; 
+            height: 200px;
+            position: relative;
+            width: 320px;
+            border-radius: 8px;
+            overflow: hidden;
+            animation: floaty 1s infinite;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        }
+        @keyframes floaty {
+            0% { transform: translate(0,0); }
+            50% { transform: translate(0, 12px); }
+            100% { transform: translate(0,0); }
+        }
+        .env-sides {
+            border-color: transparent #fbfbfb #f7f7f7 #fcfcfc;
+            border-style: solid;
+            border-width: 90px 170px;
+            bottom: 0;
+            height: 0;
+            left: 0;
+            position: absolute;
+            width: 0;
+        }
+        .env-top {
+            border-color: white transparent transparent;
+            border-style: solid;
+            border-width: 108px 140px 90px 140px;
+            height: 0;
+            left: 0;
+            position: absolute;
+            top: 0;
+            transform-origin: 50% 0;
+            width: 0;
+        }
+
+        .flower-svg-wrapper {
+            position: relative;
+            width: 150px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        svg#flower-svg {
+            color: #ffe6c7;
+            width: 120px;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6));
+        }
+        svg#bee {
+            color: #ffcc00;
+            position: absolute;
+            width: 50px;
+            height: auto;
+            opacity: 0;
+        }
+        .cake-wrapper {
+            font-size: 6rem;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+            animation: floaty 3s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        canvas.p5Canvas {
+            z-index: 200 !important;
+            pointer-events: none;
+            transition: opacity 1s ease-out;
+        }
+
+        .landing-msg {
+            position: absolute;
+            bottom: 28px;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            text-align: center;
+            color: #ffebaf;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            text-shadow: 0 0 8px rgba(255, 235, 178, 0.35);
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .dog-wrapper {
+            cursor: pointer;
+            z-index: 20;
+            position: relative;
+            margin-top: 30px;
+            transition: transform 0.3s;
+        }
+        .dog-wrapper:hover {
+            transform: scale(1.05);
+        }
+        .dog, .dog * { user-select: none; }
+        .dog .leg {
+            position: absolute;
+            bottom: 0;
+            width: 3vmax;
+            height: 4.125vmax;
+        }
+        .dog .paw {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 3.75vmax;
+            height: 1.875vmax;
+            overflow: hidden;
+        }
+        .dog .paw::before {
+            content: '';
+            position: absolute;
+            width: 3.75vmax;
+            height: 3.75vmax;
+            border-radius: 50%;
+        }
+        .dog .top {
+            border: 0; 
+            position: absolute;
+            bottom: 0;
+            left: 0.75vmax;
+            height: 4.5vmax;
+            width: 2.625vmax;
+            border-top-left-radius: 1.425vmax;
+            border-top-right-radius: 1.425vmax;
+            transform-origin: bottom right;
+            transform: rotateZ(90deg) translateX(-0.1vmax) translateY(1.5vmax);
+            z-index: -1;
+            background-image: linear-gradient(70deg, transparent 20%, #ff8b56 20%);
+        }
+
+        .dog {
+            position: relative;
+            isolation: isolate;
+            width: 22.5vmax;
+            height: 8.25vmax;
+            transition: transform 0.15s;
+        }
+        .dog:hover { transform: scale(1.04); }
+        .dog:active { transform: scale(0.97); }
+        .dog::before {
+            content: '';
+            position: absolute;
+            bottom: -0.75vmax;
+            right: -0.15vmax;
+            width: 100%;
+            height: 1.5vmax;
+            background-color: rgba(28, 49, 48, 0.1);
+            border-radius: 50%;
+            z-index: -1000;
+            animation: dogShadow 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__head {
+            position: absolute;
+            left: 1.5vmax;
+            bottom: 0;
+            width: 9.75vmax;
+            height: 8.25vmax;
+            border-top-left-radius: 4.05vmax;
+            border-top-right-radius: 4.05vmax;
+            border-bottom-right-radius: 3.3vmax;
+            border-bottom-left-radius: 3.3vmax;
+            background-color: #FF8147;
+            animation: dogHead 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__head-c {
+            position: absolute;
+            left: 1.5vmax;
+            bottom: 0;
+            width: 9.75vmax;
+            height: 8.25vmax;
+            animation: dogHead 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+            z-index: -1;
+        }
+        .dog__snout {
+            position: absolute;
+            left: -1.5vmax;
+            bottom: 0;
+            width: 7.5vmax;
+            height: 3.75vmax;
+            border-top-right-radius: 3vmax;
+            border-bottom-right-radius: 3vmax;
+            border-bottom-left-radius: 4.5vmax;
+            background-color: #D7DBD2;
+            animation: dogSnout 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__snout::before {
+            content: '';
+            position: absolute;
+            left: -0.1125vmax;
+            top: -0.15vmax;
+            width: 1.875vmax;
+            height: 1.125vmax;
+            border-top-right-radius: 3vmax;
+            border-bottom-right-radius: 3vmax;
+            border-bottom-left-radius: 4.5vmax;
+            background-color: #1C3130;
+            animation: dogSnoutB 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__nose {
+            position: absolute;
+            top: -1.95vmax;
+            left: 40%;
+            width: 0.75vmax;
+            height: 2.4vmax;
+            border-radius: 0.525vmax;
+            transform-origin: bottom;
+            transform: rotateZ(10deg);
+            background-color: #D7DBD2;
+        }
+        .dog__eye-l, .dog__eye-r {
+            position: absolute;
+            top: -0.9vmax;
+            width: 0.675vmax;
+            height: 0.375vmax;
+            border-radius: 50%;
+            background-color: #1C3130;
+            animation: dogEye 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__eye-l { left: 27%; }
+        .dog__eye-r { left: 65%; }
+        .dog__ear-l, .dog__ear-r {
+            position: absolute;
+            width: 10.5vmax;
+            height: 3.375vmax;
+            border-top-left-radius: 0vmax;
+            border-top-right-radius: 0vmax;
+            border-bottom-right-radius: 3.3vmax;
+            border-bottom-left-radius: 3.3vmax;
+            background-color: #E26538;
+        }
+        .dog__ear-l {
+            top: 1.5vmax;
+            left: 6vmax;
+            transform-origin: bottom left;
+            transform: rotateZ(-50deg);
+            z-index: -1;
+            animation: dogEarL 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__ear-r {
+            top: 1.5vmax;
+            right: 3vmax;
+            transform-origin: bottom right;
+            transform: rotateZ(20deg);
+            z-index: -2;
+            animation: dogEarR 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            position: absolute;
+            bottom: 0.3vmax;
+            left: 3.75vmax;
+            width: 18.75vmax;
+            height: 7.2vmax;
+            border-top-left-radius: 3vmax;
+            border-top-right-radius: 6vmax;
+            border-bottom-right-radius: 1.5vmax;
+            border-bottom-left-radius: 6vmax;
+            background-color: #ff702e;
+            z-index: -2;
+            animation: dogBody 10s cubic-bezier(0.3, 0.41, 0.18, 1.01) infinite;
+        }
+        .dog__tail {
+            position: absolute;
+            right: -3vmax;
+            height: 1.5vmax;
+            width: 4.5vmax;
+            background-color: #E96839;
+            border-radius: 1.5vmax;
+        }
+        .dog__paws {
+            position: absolute;
+            bottom: 0;
+            left: 7.5vmax;
+            width: 12vmax;
+            height: 3vmax;
+        }
+        .dog__bl-leg { left: -3vmax; z-index: -10; }
+        .dog__bl-paw::before { background-color: #bec4b6; }
+        .dog .dog__bl-top { background-image: linear-gradient(80deg, transparent 20%, #E96839 20%); }
+        .dog__fl-leg { z-index: 10; left: 0; }
+        .dog__fl-paw::before { background-color: #D7DBD2; }
+        .dog__fr-leg { right: 0; }
+        .dog__fr-paw::before { background-color: #D7DBD2; }
+
+        .dog.petted .dog__tail { transform-origin: left center; animation: dogWag 0.25s ease-in-out 6; }
+        @keyframes dogWag { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(25deg); } }
+
+        @keyframes dogHead {
+            0%, 10%, 20%, 26%, 28%, 90%, 100% { height: 8.25vmax; bottom: 0; transform-origin: bottom right; transform: rotateZ(0); }
+            5%, 15%, 22%, 24%, 30% { height: 8.1vmax; }
+            32%, 50% { height: 8.25vmax; }
+            55%, 60% { bottom: 0.75vmax; transform-origin: bottom right; transform: rotateZ(0); }
+            70%, 80% { bottom: 0.75vmax; transform-origin: bottom right; transform: rotateZ(10deg); }
+        }
+        @keyframes dogBody {
+            0%, 10%, 20%, 26%, 28%, 32%, 100% { height: 7.2vmax; }
+            5%, 15%, 22%, 24%, 30% { height: 7.05vmax; }
+        }
+        @keyframes dogEarL {
+            0%, 10%, 20%, 26%, 28%, 82%, 100% { transform: rotateZ(-50deg); }
+            5%, 15%, 22%, 24% { transform: rotateZ(-48deg); }
+            30%, 31% { transform: rotateZ(-30deg); }
+            32%, 80% { transform: rotateZ(-60deg); }
+        }
+        @keyframes dogEarR {
+            0%, 10%, 20%, 26%, 28% { transform: rotateZ(20deg); }
+            5%, 15%, 22%, 24% { transform: rotateZ(18deg); }
+            30%, 31% { transform: rotateZ(10deg); }
+            32% { transform: rotateZ(25deg); }
+        }
+        @keyframes dogSnout {
+            0%, 10%, 20%, 26%, 28%, 82%, 100% { height: 3.75vmax; }
+            5%, 15%, 22%, 24% { height: 3.45vmax; }
+        }
+        @keyframes dogSnoutB {
+            0%, 10%, 20%, 26%, 28%, 98%, 100% { width: 1.875vmax; }
+            5%, 15%, 22%, 24% { width: 1.8vmax; }
+            34%, 98% { width: 1.275vmax; }
+        }
+        @keyframes dogShadow {
+            0%, 10%, 20%, 26%, 28%, 30%, 84%, 100% { width: 99%; }
+            5%, 15%, 22%, 24% { width: 101%; }
+            34%, 81% { width: 96%; }
+        }
+        @keyframes dogEye {
+            0%, 30% { width: 0.675vmax; height: 0.3vmax; }
+            32%, 59%, 90%, 100% { width: 0.525vmax; height: 0.525vmax; transform: translateY(0); }
+            60%, 75% { transform: translateY(-0.3vmax); }
+            80%, 85% { transform: translateY(0.15vmax); }
+        }
+
+        .pet-heart {
+            position: fixed;
+            z-index: 300;
+            font-size: 26px;
+            pointer-events: none;
+            animation: petFloat 1.2s ease-out forwards;
+        }
+        @keyframes petFloat { to { transform: translateY(-90px); opacity: 0; } }
+
+        /* ---------- MODALS STYLING ---------- */
+        .modal {
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: url('paper-background.jpg') center/cover no-repeat;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 50px 40px;
+            border-radius: 8px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            position: relative;
+            color: #333; 
+            font-size: 1.1rem;
+            line-height: 1.6;
+            
+            -ms-overflow-style: none; 
+            scrollbar-width: none;  
+        }
+        .modal-content::-webkit-scrollbar {
+            display: none; 
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 100;
+        }
+        .close-btn:hover {
+            transform: scale(1.2);
+        }
+        .letter-text p {
+            margin-bottom: 20px;
+        }
+
+        .flashcard-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 350px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .flashcard-content:active {
+            transform: scale(0.98);
+        }
+        #reason-counter {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        #reason-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.5rem;
+            color: #d9534f;
+            line-height: 1.4;
+            padding: 0 20px;
+            transition: transform 0.1s ease;
+        }
+        .click-hint {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 40px;
+        }
+
+        /* ---------- CORRECTED SVG CAKE STYLING ---------- */
+        .cake-container {
+            position: relative;
+            width: 200px;
+            margin: 0 auto;
+            z-index: 5;
+        }
+        #cake {
+            display: block;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .candles-container {
+            position: absolute;
+            top: 48px; /* Sits on the top of the finished cake */
+            left: 50%;
+            width: 140px;
+            height: 35px;
+            display: flex;
+            justify-content: space-between;
+            transform: translate(-50%, 0);
+            z-index: 15;
+        }
+        .velas {
+            background: #ffffff;
+            border-radius: 10px;
+            position: relative;
+            width: 5px;
+            height: 35px;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+        .velas:after,
+        .velas:before {
+            background: rgba(255, 0, 0, 0.4);
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 3px;
+        }
+        .velas:after { top: 25%; left: 0; }
+        .velas:before { top: 45%; left: 0; }
+        .fuego {
+            border-radius: 100%;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            margin-left: -2.6px;
+            width: 6.66666667px;
+            height: 18px;
+            opacity: 1;
+            transition: opacity 0.5s;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        .fuego:nth-child(1) { animation: fuego 2s 1.5s infinite; }
+        .fuego:nth-child(2) { animation: fuego 1.5s 1.5s infinite; }
+        .fuego:nth-child(3) { animation: fuego 1s 1.5s infinite; }
+        .fuego:nth-child(4) { animation: fuego 0.5s 1.5s infinite; }
+        .fuego:nth-child(5) { animation: fuego 0.2s 1.5s infinite; }
+
+        @keyframes fuego {
+            0%, 100% {
+                background: rgba(254, 248, 97, 0.5);
+                box-shadow: 0 0 40px 10px rgba(248, 233, 209, 0.2);
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                background: rgba(255, 50, 0, 0.1);
+                box-shadow: 0 0 40px 20px rgba(248, 233, 209, 0.2);
+                transform: translateY(-20px) scale(0);
+            }
+        }
+        @keyframes flicker {
+            from { transform: translateY(0) scale(1); }
+            to { transform: translateY(-3px) scale(0.6); }
+        }
+        @keyframes candle-appear {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .blow-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 25;
+            background: transparent;
+            cursor: pointer;
+        }
+        .cake-confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            top: -10px;
+            z-index: 2000;
+            pointer-events: none;
+            animation: cake-confetti-fall 3s linear forwards;
+        }
+        @keyframes cake-confetti-fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="confetti-container"></div>
+
+    <div class="app-container">
+        
+        <div id="spotify-wrapper">
+            <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/6fhe6l03HCQZYfJKsbaGII?utm_source=generator&si=fe83a11a67d840c4&autoplay=1" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        </div>
+
+        <div id="landing-screen" class="screen active">
+            <h1 class="glow-text">HALOOOOO</h1>
+            
+            <div class="dog-wrapper" onclick="window.petDog()">
+                <div class="main-dog">
+                    <div class="dog" id="dog">
+                        <div class="dog__paws">
+                            <div class="dog__bl-leg leg">
+                                <div class="dog__bl-paw paw"></div>
+                                <div class="dog__bl-top top"></div>
+                            </div>
+                            <div class="dog__fl-leg leg">
+                                <div class="dog__fl-paw paw"></div>
+                                <div class="dog__fl-top top"></div>
+                            </div>
+                            <div class="dog__fr-leg leg">
+                                <div class="dog__fr-paw paw"></div>
+                                <div class="dog__fr-top top"></div>
+                            </div>
+                        </div>
+                        <div class="dog__body">
+                            <div class="dog__tail"></div>
+                        </div>
+                        <div class="dog__head">
+                            <div class="dog__snout">
+                                <div class="dog__nose"></div>
+                                <div class="dog__eyes">
+                                    <div class="dog__eye-l"></div>
+                                    <div class="dog__eye-r"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dog__head-c">
+                            <div class="dog__ear-l"></div>
+                            <div class="dog__ear-r"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="landing-msg">
+                make some flowers for yourself bubba! just click anywhere hehe.<br><br>
+                pet the doggo when ur done!
+            </div>
+        </div>
+
+        <div id="main-screen" class="screen hide">
+            <h1 id="birthday-title" class="title-animation" onclick="window.goHome()">happy birthday bubba</h1>
+
+            <div id="fountain-container"></div>
+
+            <div id="menu-options" class="fade-in">
+                
+                <div class="menu-item" onclick="window.openSection('message')">
+                    <div class="winged-wrapper">
+                        <div class="env-wing env-right"></div>
+                        <div class="env-wing env-left"></div>
+                        <div class="env-heart"></div>
+                        <div id="env-custom">
+                            <div class="env-top"></div>
+                            <div class="env-sides"></div>
+                        </div>
+                    </div>
+                    <div class="menu-label">a lil somethin' from my heart</div>
+                </div>
+
+                <div class="menu-item" onclick="window.openSection('reasons')">
+                    <div class="flower-svg-wrapper">
+                        <svg id="flower-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-25 0 150 100">
+                          <defs>
+                            <mask id="mask-petals">
+                              <rect width="100" height="100" fill="hsl(0, 0%, 100%)" />
+                              <g transform="translate(50 40)">
+                                <g class="petals">
+                                  <circle r="11" fill="hsl(0, 0%, 0%)" />
+                                </g>
+                              </g>
+                            </mask>
+                          </defs>
+                          <g transform="translate(50 98)">
+                            <g class="stem" transform="scale(1 1)">
+                              <g fill="currentColor">
+                                <g class="leaf" transform="rotate(45)">
+                                  <path d="M 0 0 c 20 -8 15 -32 0 -42 -15 10 -20 34 0 42" />
+                                </g>
+                                <g transform="scale(-1 1)">
+                                  <g class="leaf" transform="rotate(45)">
+                                    <path d="M 0 0 c 20 -8 15 -32 0 -42 -15 10 -20 34 0 42" />
+                                  </g>
+                                </g>
+                              </g>
+                            </g>
+                          </g>
+                          <g mask="url(#mask-petals)">
+                            <g transform="translate(50 40)">
+                              <g fill="currentColor">
+                                <g class="petals">
+                                  <circle transform="translate(0 -14)" r="11" />
+                                  <circle transform="rotate(72) translate(0 -14)" r="11" />
+                                  <circle transform="rotate(144) translate(0 -14)" r="11" />
+                                  <circle transform="rotate(216) translate(0 -14)" r="11" />
+                                  <circle transform="rotate(288) translate(0 -14)" r="11" />
+                                </g>
+                              </g>
+                            </g>
+                          </g>
+                          <path id="path" stroke="none" fill="none" d="M -25 -20 a 30 30 0 0 0 60 0 30 30 0 0 0 -60 0 30 30 0 0 1 -60 0 30 30 0 0 1 60 0" />
+                        </svg>
+
+                        <svg id="bee" viewBox="-10.5 -10.5 21 21">
+                          <g transform="rotate(90) translate(0 -4)">
+                            <g stroke="currentColor">
+                              <circle fill="currentColor" r="4" stroke-width="2.5" />
+                              <g fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path transform="rotate(45) translate(0 -4)" d="M 0 0 v -3" />
+                                <path transform="rotate(-45) translate(0 -4)" d="M 0 0 v -3" />
+                                <g fill="hsl(200, 80%, 90%)">
+                                  <path transform="rotate(15)" d="M 0 0 h 7 a 3 3 0 0 1 0 6 q -4 0 -7 -6" />
+                                  <path transform="scale(-1 1) rotate(15)" d="M 0 0 h 7 a 3 3 0 0 1 0 6 q -4 0 -7 -6" />
+                                </g>
+                                <g fill="hsl(50, 80%, 50%)">
+                                  <path d="M 0 0 c 2 6 8 10 0 12 -8 -2 -2 -6 0 -12" />
+                                </g>
+                              </g>
+                            </g>
+                          </g>
+                        </svg>
+                    </div>
+                    <div class="menu-label">things i love</div>
+                </div>
+
+                <div class="menu-item" onclick="window.openSection('cake')">
+                    <div class="cake-wrapper">🎂</div>
+                    <div class="menu-label">some cake xD</div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MESSAGE MODAL -->
+    <div id="message-modal" class="modal hide">
+        <div class="modal-content">
+            <button class="close-btn" onclick="window.closeModal('message-modal', event)">X</button>
+            <div class="letter-text">
+                <p>happy birthday my love!</p>
+
+                <p>before reading everything else, i know this past week has been incredibly stressful with the scam, your birthday plans, and everything else going on. it breaks my heart that someone took advantage of you right before your special day. you really did not deserve that extra stress but still, i hope you let go of any stress and just take a moment to breath and enjoy yourself. even though things feel heavy and confusing right now, i couldn't just let the day pass without making sure you know exactly how much you mean to me and how deeply i love you. :) ANYWAYS HERE IT IS!!!</p>
+
+                <p>few weeks back bubba, i planned to do this mini project for your birthday. i was just sitting at my desk and sorting out the code and stuff, i couldn't help but think about our journey and how far we have come. being long distance is hard and all but looking at us now, i just can't help but be proud. minus us not seeing each other for long periods of time. but, think about the other night when we were playing val. siguro in the past the anxiety and misunderstanding might have made us pull away or shut down, or slip back into hold habits and what not. but we didn't. maybe it's a small thing, maybe it's not. but that to me meant everything and i think it proves one way or another na we can weather any storm together. call it cliche or what ever but it makes me fall in love with you even more.</p>
+
+                <p>i know you are carrying a whole ass mountain on your shoulders right now bubba. between the financial stress and the emotional burnout and everything going on with tita, i see how exhausted you are. i know you have this deep rooted instinct to just be the fixer, to hold the world together for everyone else even when you feel like you are falling apart inside. and i realized na you have such a beautiful and caring soul bubba. but also, i need you to listen to me. you don't have to fix everything to fix everything to be worthy of love, and you absolutely do NOT have to carry it all alone.</p>
+
+                <p>i love you for exactly who you are. i love the way you care so deeply about the people around you. i love you in the moments when you are feeling strong and i love you just as much when you are breaking down. i know there are heavy nights when the burnout gets too much. but im writing this so you have it in black and white to read whenever everything feels overwhelming. i am always right here by your side bubba. on your best days and on your absolute darkest most tiring days, i choose you. we will always go through it as a team bubba.</p>
+
+                <p>but today i really just want to celebrate you. i love you exactly as you are. you make  my life so much better just by being in it and i wake up everyday feeling lucky that you are mine. falling for you was the easiest thing i have ever done bubba. and you are without a doubt my favorite person.</p>
+
+                <p>i built this digital space for you so that no matter the distance between us, you always have a piece of my heart right in your pocket. a place where you can look at our memories and feel how much i love you. i want to give you the world bubba. i want to take you on real dates and hold you close and make so many more beautiful memories with you.</p>
+
+                <p>so, take a deep breath today my love. let me hold the weight of the world for a while and just let yourself be celebrated. you deserve all the happiness today and every day.</p>
+
+                <p>happy birthday to my beautiful lady. i love you more than words could ever say.</p>
+
+                <p>yours always,<br>ced</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- REASONS FLASHCARD MODAL -->
+    <div id="reasons-modal" class="modal hide">
+        <div class="modal-content flashcard-content" onclick="window.nextReason(event)">
+            <button class="close-btn" onclick="window.closeModal('reasons-modal', event)">X</button>
+            <p id="reason-counter">1 / 100</p>
+            <h2 id="reason-text">i love the way your laugh sounds</h2>
+            <p class="click-hint">(click anywhere to read the next one)</p>
+        </div>
+    </div>
+
+    <!-- CAKE MODAL -->
+    <div id="cake-modal" class="modal hide">
+        <div class="modal-content" style="position: relative; text-align: center; overflow: visible;">
+            <button class="close-btn" onclick="window.closeModal('cake-modal', event)">X</button>
+            <div class="blow-area" id="blowArea"></div>
+
+            <div style="color: #7f6158; font-weight: 300; text-align: center; margin-bottom: 10px;">
+                <h1 style="font-family: 'Dancing Script', cursive; font-size: 2.5rem;">happy birthday!</h1>
+            </div>
+
+            <div class="cake-container" style="margin-top: 40px;">
+                <div class="candles-container" id="candles">
+                    <!-- Candles added by JS -->
+                </div>
+
+                <svg id="cake" version="1.1" x="0px" y="0px" width="200px" height="155px" viewBox="0 330 200 155" enable-background="new 0 0 200 500" xml:space="preserve">
+                    <path fill="#a88679" d="M173.667-13.94c-49.298,0-102.782,0-147.334,0c-3.999,0-4-16.002,0-16.002
+                        c44.697,0,96.586,0,147.334,0C177.667-29.942,177.668-13.94,173.667-13.94z">
+                        <animate id="bizcocho_3" attributeName="d" calcMode="spline" keySplines="0 0 1 1; 0 0 1 1"
+                            begin="relleno_2.end" dur="0.3s" fill="freeze" values="
+                            M173.667-13.94c-49.298,0-102.782,0-147.334,0c-3.999,0-4-16.002,0-16.002
+                            c44.697,0,96.586,0,147.334,0C177.667-29.942,177.668-13.94,173.667-13.94z
+                            ;
+                            M173.667,411.567c-47.995,12.408-102.955,12.561-147.334,0
+                            c-3.848-1.089-0.189-16.089,3.661-15.002c44.836,12.66,90.519,12.753,139.427,0.07
+                            C173.293,395.631,177.541,410.566,173.667,411.567z
+                            ;
+                            M173.667,427.569c-49.795,0-101.101,0-147.334,0c-3.999,0-4-16.002,0-16.002
+                            c46.385,0,97.539,0,147.334,0C177.668,411.567,177.667,427.569,173.667,427.569z" />
+                    </path>
+                    <path fill="#8b6a60" d="M100-178.521c1.858,0,3.364,1.506,3.364,3.363c0,0,0,33.17,0,44.227
+                        c0,19.144,0,57.431,0,76.574c0,10.152,0,40.607,0,40.607c0,1.858-1.506,3.364-3.364,3.364l0,0c-1.858,0-3.364-1.506-3.364-3.364c0,0,0-30.455,0-40.607c0-19.144,0-57.432,0-76.575c0-11.057,0-44.226,0-44.226C96.636-177.015,98.142-178.521,100-178.521
+                        L100-178.521z">
+                        <animate id="relleno_2" attributeName="d" calcMode="spline" keySplines="0 0 1 1; 0 0 1 1; 0 0 0.58 1"
+                            begin="bizcocho_2.end" dur="0.5s" fill="freeze" values="
+                            M100-178.521c1.858,0,3.364,1.506,3.364,3.363c0,0,0,33.17,0,44.227
+                            c0,19.144,0,57.431,0,76.574c0,10.152,0,40.607,0,40.607c0,1.858-1.506,3.364-3.364,3.364l0,0c-1.858,0-3.364-1.506-3.364-3.364c0,0,0-30.455,0-40.607c0-19.144,0-57.432,0-76.575c0-11.057,0-44.226,0-44.226C96.636-177.015,98.142-178.521,100-178.521
+                            L100-178.521z
+                            ;
+                            M100,267.257c1.858,0,3.364,1.506,3.364,3.363c0,0,0,33.17,0,44.227
+                            c0,19.143,0,57.43,0,76.574c0,10.151,0,40.606,0,40.606c0,1.858-1.506,3.364-3.364,3.364l0,0c-1.858,0-3.364-1.506-3.364-3.364
+                            c0,0,0-30.455,0-40.606c0-19.145,0-57.432,0-76.576c0-11.057,0-44.225,0-44.225C96.636,268.763,98.142,267.257,100,267.257
+                            L100,267.257z
+                            ;
+                            M93.928,405.433c-0.655,6.444-0.102,9.067,2.957,11.798c0,0,8.083,5.571,16.828,3.503
+                            c18.629-4.406,43.813,6.194,50.792,7.791c14.75,3.375,9.162,6.867,9.162,6.867c-2.412,2.258-58.328,0-73.667,0l0,0
+                            c-1.858,0-69.995,2.133-73.667,0c0,0-3.337-2.439,6.172-5.992c11.375-4.25,52.875,8.822,47.139-9.442
+                            c-6.333-20.167,5.226-21.514,5.226-21.514c3.435-0.915,12.78-6.663,10.923-0.546L93.928,405.433z
+                            ;
+                            M102.242,427.569c5.348,0,14.079,0,17.462,0c0,0,17.026,0,27.504,0
+                            c19.143,0,20.39-3.797,26.459,0c3,1.877,0,7.823,0,7.823c-2.412,2.258-58.328,0-73.667,0l0,0c-1.858,0-67.187,0-73.667,0
+                            c0,0-4.125-4.983,0-7.823c5.201-3.58,16.085,0,23.725,0c8.841,0,20.762,0,20.762,0c3.686,0,8.597,0,19.511,0H102.242z" />
+                    </path>
+                    <path fill="#a88679" d="M173.667-15.929c-46.512,0-105.486,0-147.334,0c-3.999,0-4-16.002,0-16.002
+                        c43.566,0,97.96,0,147.334,0C177.667-31.931,177.666-15.929,173.667-15.929z">
+                        <animate id="bizcocho_2" attributeName="d" calcMode="spline"
+                            keySplines="0 0 1 1; 0 0 1 1; 0.25 0 0.58 1" begin="relleno_1.end" dur="0.5s" fill="freeze" values="
+                            M173.667-15.929c-46.512,0-105.486,0-147.334,0c-3.999,0-4-16.002,0-16.002
+                            c43.566,0,97.96,0,147.334,0C177.667-31.931,177.666-15.929,173.667-15.929z
+                            ;
+                            M173.434,445.393c-47.269,8.001-105.245,8.001-147.334,0c-3.929-0.747-0.692-16.543,3.243-15.824
+                            c43.828,8.001,92.165,8.001,140.739,0C174.029,428.918,177.377,444.726,173.434,445.393z
+                            ;
+                            M173.667,449.514c-47.576-5.454-102.799-5.744-147.333,0c-3.966,0.512-3.938-15.297,0-16.002
+                            c43.683-7.823,97.646-8.026,147.333,0C177.616,434.15,177.642,449.969,173.667,449.514z
+                            ;
+                            M173.667,451.394c-49.298,0-102.782,0-147.334,0c-3.999,0-4-16.002,0-16.002
+                            c44.697,0,96.586,0,147.334,0C177.667,435.392,177.668,451.394,173.667,451.394z" />
+                    </path>
+                    <path fill="#8b6a60" d="M101.368-73.685c0,12.164,0,15.18,0,28.519c0,22.702,0-13.661,0,8.304c0,14.48,0,18.233,0,30.512
+                        c0,1.753-2.958,1.847-2.958,0c0-12.68,0-16.277,0-30.401c0-21.983,0,11.66,0-8.305c0-13.027,0-15.992,0-28.628
+                        C98.411-75.883,101.368-75.592,101.368-73.685z">
+                        <animate id="relleno_1" attributeName="d" calcMode="spline" keySplines="0 0 1 1; 0 0 1 1; 0 0 0.6 1"
+                            begin="bizcocho_1.end" dur="0.5s" fill="freeze" values="
+                            M101.368-73.685c0,12.164,0,15.18,0,28.519c0,22.702,0-13.661,0,8.304c0,14.48,0,18.233,0,30.512
+                            c0,1.753-2.958,1.847-2.958,0c0-12.68,0-16.277,0-30.401c0-21.983,0,11.66,0-8.305c0-13.027,0-15.992,0-28.628
+                            C98.411-75.883,101.368-75.592,101.368-73.685z
+                            ;
+                            M101.368,350.885c0,12.164,0,65.18,0,78.518c0,22.703,0-33.66,0-11.695c0,14.48,0,28.232,0,40.512
+                            c0,1.753-2.958,1.847-2.958,0c0-12.68,0-26.277,0-40.402c0-21.982,0,31.66,0,11.695c0-13.027,0-65.992,0-78.627
+                            C98.411,348.686,101.368,348.977,101.368,350.885z
+                            ;
+                            M128.38,447.567c37.626,6.312,39.303,13.658,26.833,12.833c-22.653-1.499-13.636-0.831-23.302-0.831
+                            c-14.48,0-17.884,0-30.163,0c-2.087,0-2.068,0-3.915,0c-13.333,0-8.963,0-23.088,0c-11.668,0-14.062,5.995-27.532,1.164
+                            c-12.629-4.529,38.667-3.167,46.833-17.333C100.077,432.94,105.546,443.736,128.38,447.567z
+                            ;
+                            M173.667,451.394c2.875,0,2.997,9.257,0,9.131c-22.662-0.956-32.09-0.956-41.756-0.956
+                            c-14.48,0-17.884,0-30.163,0c-2.087,0-2.068,0-3.915,0c-13.333,0-8.963,0-23.088,0c-11.668,0-34.99-0.294-48.412,1.831
+                            c-4.109,0.65-3.01-10.006,0-10.006C37.129,451.394,149.379,451.394,173.667,451.394z" />
+                    </path>
+                    <path fill="#a88679" d="M173.667,21.571c-33.174,0-111.467,0-147.334,0c-4,0-4-16.002,0-16.002c39.836,0,105.982,0,147.334,0
+                        C177.668,5.569,177.667,21.571,173.667,21.571z">
+                        <animate id="bizcocho_1" attributeName="d" calcMode="spline"
+                            keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1; 0.25 0 1 1; 0 0 1 1; 0.25 0 0.6 1" begin="indefinite" dur="0.8s"
+                            fill="freeze" values="
+                            M173.667,21.571c-33.174,0-111.467,0-147.334,0c-4,0-4-16.002,0-16.002c39.836,0,105.982,0,147.334,0
+                            C177.668,5.569,177.667,21.571,173.667,21.571z
+                            ;
+                            M173.667,459.569c-33.197,16.002-110.782,16.002-147.334,0c-3.664-1.604,1.614-15.617,5.337-14.153
+                            c40.702,16.002,94.289,16.104,136.505,0.103C171.917,444.1,177.271,457.832,173.667,459.569z
+                            ;
+                            M171.817,475.571c-39.361-3.001-105.438-2.571-143.556,0c-3.991,0.27-7.377-14.736-3.387-15.014
+                            c41.553-2.888,104.421-3.121,150.51-0.233C179.378,460.574,175.806,475.875,171.817,475.571z
+                            ;
+                            M171.817,459.564c-38.8-12.188-104.504-13.762-143.556,0c-3.772,1.329-7.961-12.604-4.178-13.905
+                            c40.864-14.064,105.114-15.52,151.918-0.973C179.822,445.874,175.634,460.762,171.817,459.564z
+                            ;
+                            M173.667,475.571c-46.376-5.005-105.924-4.003-147.334,0c-3.981,0.385-3.479-15.421,0.479-16.002
+                            c43.087-6.327,97.705-7.083,146.855,0.438C177.621,460.613,177.644,476,173.667,475.571z
+                            ;
+                            M173.667,474.117c-46.376,1.866-105.638,2.01-147.334,0c-3.995-0.192-3.52-16.144,0.479-16.002
+                            c43.794,1.55,96.341,1.541,145.723,0C176.532,457.99,177.663,473.956,173.667,474.117z
+                            ;
+                            M173.667,475.571c-46.512,0-105.486,0-147.334,0c-3.999,0-4-16.002,0-16.002c43.566,0,97.96,0,147.334,0
+                            C177.667,459.569,177.666,475.571,173.667,475.571z" />
+                    </path>
+                    <path fill="#fefae9" d="M104.812,113.216c0,3.119-2.164,5.67-4.812,5.67c-2.646,0-4.812-2.551-4.812-5.67c0-5.594,0-16.782,0-22.375
+                        c0-5.143,0-15.427,0-20.568c0-7.333,0-21.998,0-29.33c0-5.523,0-16.569,0-22.092c0-3.295,0-9.885,0-13.181
+                        C95.188,2.551,97.353,0,100,0c2.648,0,4.812,2.551,4.812,5.669c0,3.248,0,9.743,0,12.991c0,5.428,0,16.284,0,21.711
+                        c0,7.618,0,22.854,0,30.472c0,4.952,0,14.854,0,19.807C104.812,96.292,104.812,107.576,104.812,113.216z">
+                        <animate id="crema" attributeName="d" calcMode="spline"
+                            keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1; 0.25 0 1 1; 0 0 1 1; 0 0 0.58 1" begin="bizcocho_3.end"
+                            dur="2s" fill="freeze" values="
+                            M104.812,113.216c0,3.119-2.164,5.67-4.812,5.67c-2.646,0-4.812-2.551-4.812-5.67c0-5.594,0-16.782,0-22.375
+                            c0-5.143,0-15.427,0-20.568c0-7.333,0-21.998,0-29.33c0-5.523,0-16.569,0-22.092c0-3.295,0-9.885,0-13.181
+                            C95.188,2.551,97.353,0,100,0c2.648,0,4.812,2.551,4.812,5.669c0,3.248,0,9.743,0,12.991c0,5.428,0,16.284,0,21.711
+                            c0,7.618,0,22.854,0,30.472c0,4.952,0,14.854,0,19.807C104.812,96.292,104.812,107.576,104.812,113.216z
+                            ;
+                            M104.812,405.897c0,3.119-2.164,5.67-4.812,5.67c-2.646,0-4.812-2.551-4.812-5.67c0-5.594,0-16.782,0-22.376
+                            c0-5.143,0-15.426,0-20.568c0-7.332,0-21.997,0-29.33c0-5.522,0-16.568,0-22.092c0-3.295,0-9.885,0-13.181
+                            c0-3.118,2.165-5.669,4.812-5.669c2.648,0,4.812,2.551,4.812,5.669c0,3.247,0,9.743,0,12.991c0,5.428,0,16.283,0,21.711
+                            c0,7.618,0,22.854,0,30.473c0,4.951,0,14.854,0,19.807C104.812,388.972,104.812,400.256,104.812,405.897z
+                            ;
+                            M111.873,411.567c-3.119,0-9.226,0-11.874,0c-2.646,0-7.748,0-10.867,0c-7.086,0-12.698,0-18.292,0
+                            c-6.592,0-12.871,7.371-19.166,3.008c-10.043-6.961-7.776-10.169,2.991-17.745c12.61-8.873,27.713,1.994,25.919-7.531
+                            c-2.589-13.742,11.008-14.513,11.365-17.789c0.441-4.051,4.235-11.107,8.051-8.175c3.113,2.393,1.007,8.008,0,13.159
+                            c-1.871,9.569,8.058,2.113,9.494,14.155c2.592,21.732,21.184-0.675,29.309,7.976c5.216,5.553,18.413,5.552,15.426,12.942
+                            c-3.131,7.745-15.825-4.369-23.8,2.903C126.261,418.271,118.301,411.567,111.873,411.567z
+                            ;
+                            M111.873,411.567c-3.119,0-9.226,0-11.874,0c-2.646,0-9.734,4.069-12.853,4.069
+                            c-7.086,0-10.712-4.069-16.306-4.069c-6.592,0-12.12,6.013-19.166,3.008c-7.053-3.008-7.458,2.026-18.659,1.165
+                            c-6.832-0.525-7.522-3.034-7.533-6.265c-0.037-10.336,22.073-2.452,36.613-2.628c10.234-0.124,19.856-1.439,37.905-2.102
+                            c16.642-0.61,32.699,1.552,46.009,1.927c12.438,0.351,29.663-8.99,31.532,3.315c0.773,5.093-5.605,3.342-11.211,9.579
+                            c-5.093,5.667-7.59-4.605-12.965-3.832c-8.269,1.189-14.962-8.537-22.937-1.265C126.261,418.271,118.301,411.567,111.873,411.567z
+                            ;
+                            M110.946,413.652c-2.904-1.137-8.405-2.748-12.446-0.97c-6.099,2.685-7.273,10.358-13.253,8.242
+                            c-7.843-2.775-8.953-5.008-14.546-5.01c-24.653-0.011-4.849,26.507-18.264,26.507c-12.377,0,5.791-33.537-19.422-26.682
+                            c-7.703,2.095-9.806-0.942-9.817-4.173c-0.037-10.336,24.357-4.544,38.897-4.72c10.234-0.124,19.856-1.439,37.905-2.102
+                            c16.642-0.61,32.699,1.552,46.009,1.927c12.438,0.351,28.973-8.865,31.532,3.315c1.449,6.896,0.318,15.624-3.874,15.624
+                            c-7.619,0-1.788-15.192-19.243-7.111c-7.581,3.51-15.963-9.738-26.669,1.066C120.644,426.744,118.381,416.561,110.946,413.652z
+                            ;
+                            M111.547,413.9c-2.969-0.956-8.775-0.949-13.167-0.5c-14.667,1.5-8.325,16.508-14.667,16.666
+                            c-6.667,0.166-0.167-13.5-13.013-14.151c-30.471-1.545-5.572,46.651-18.987,46.651c-12.377,0,10.333-50.166-18.667-44.5
+                            c-7.835,1.531-9.537-1.417-9.548-4.647c-0.037-10.336,23.675-5.177,38.215-5.353c10.234-0.124,20.618-1.671,38.667-2.333
+                            c16.642-0.61,32.023,1.458,45.333,1.833c12.438,0.351,33.819-8.431,33.199,4.001c-0.532,10.666,0.414,26.166-5.245,25.833
+                            c-7.606-0.447-2.954-31.5-19.243-18.899c-7.985,6.177-17.658-5.969-27.377,5.732C118.88,434.066,121.38,417.067,111.547,413.9z
+                            ;
+                            M111.547,415.233c-6.667-0.834-9.667,4.667-13.833,3.333c-19.649-6.291-8.158,22.176-14.5,22.334
+                            c-6.667,0.166,2.833-18-13.333-22.167c-29.544-7.615-9.667,43.833-20.167,43.833c-10.333,0,8.004-55.006-16.833-39
+                            c-7.5,4.833-9.508-3.78-9.299-7.004c0.799-12.329,23.592-7.153,38.132-7.329c10.234-0.124,20.238-1.505,38.287-2.167
+                            c16.642-0.61,32.903,1.125,46.213,1.5c12.438,0.351,35.058-5.579,31.863,6.451c-5.532,20.833,1.25,28.216-4.409,27.883
+                            c-7.606-0.447-6.058-37.895-20.62-23.333c-10.167,10.166-15.972-0.747-25,12C119.547,443.568,121.798,416.515,111.547,415.233z" />
+                    </path>
+                    <rect x="10" y="475.571" fill="#fefae9" width="180" height="4" />
+                </svg>
+
+                <div id="cake-instructions" class="instructions" style="font-family: 'Dancing Script', cursive; font-size: 1.5rem; color: #7f6158; margin-top: 15px;">
+                    make a wish and blow the candles!
+                </div>
+            </div>
+
+            <div id="gifContainer" style="display: none; text-align: center; margin-top: 20px; z-index: 20; position: relative;">
+                <img src="cat.gif" alt="Celebration GIF" style="width: 200px; max-width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        #define PI 3.14159265359
+        uniform float u_ratio;
+        uniform vec2 u_cursor;
+        uniform float u_stop_time;
+        uniform float u_clean;
+        uniform vec2 u_stop_randomizer;
+        uniform sampler2D u_texture;
+        varying vec2 vUv;
+        vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+        float snoise(vec2 v) {
+            const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+            vec2 i = floor(v + dot(v, C.yy));
+            vec2 x0 = v - i + dot(i, C.xx);
+            vec2 i1;
+            i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+            vec4 x12 = x0.xyxy + C.xxzz;
+            x12.xy -= i1;
+            i = mod289(i);
+            vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+            vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
+            m = m*m;
+            m = m*m;
+            vec3 x = 2.0 * fract(p * C.www) - 1.0;
+            vec3 h = abs(x) - 0.5;
+            vec3 ox = floor(x + 0.5);
+            vec3 a0 = x - ox;
+            m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+            vec3 g;
+            g.x = a0.x * x0.x + h.x * x0.y;
+            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+            return 130.0 * dot(m, g);
+        }
+        float get_flower_shape(vec2 _p, float _pet_n, float _angle, float _outline) {
+            _angle *= 3.;
+            _p = vec2(_p.x * cos(_angle) - _p.y * sin(_angle), _p.x * sin(_angle) + _p.y * cos(_angle));
+            float a = atan(_p.y, _p.x);
+            float flower_sectoral_shape = pow(abs(sin(a * _pet_n)), .4) + .25;
+            vec2 flower_size_range = vec2(.03, .1);
+            float size = flower_size_range[0] + u_stop_randomizer[0] * flower_size_range[1];
+            float flower_radial_shape = pow(length(_p) / size, 2.);
+            flower_radial_shape -= .1 * sin(8. * a); 
+            flower_radial_shape = max(.1, flower_radial_shape);
+            flower_radial_shape += smoothstep(0., 0.03, -_p.y + .2 * abs(_p.x));
+            float grow_time = step(.25, u_stop_time) * pow(u_stop_time, .3);
+            float flower_shape = 1. - smoothstep(0., flower_sectoral_shape, _outline * flower_radial_shape / max(grow_time, 1e-4));
+            flower_shape *= step(1e-4, grow_time) * (1. - step(1., grow_time));
+            return flower_shape;
+        }
+        float get_stem_shape(vec2 _p, vec2 _uv, float _w, float _angle) {
+            _w = max(.004, _w);
+            float x_offset = _p.y * sin(_angle);
+            x_offset *= pow(3. * _uv.y, 2.);
+            _p.x -= x_offset;
+            float noise_power = .5;
+            float cursor_horizontal_noise = noise_power * snoise(2. * _uv * u_stop_randomizer[0]);
+            cursor_horizontal_noise *= pow(dot(_p.y, _p.y), .6);
+            cursor_horizontal_noise *= pow(dot(_uv.y, _uv.y), .3);
+            _p.x += cursor_horizontal_noise;
+            float left = smoothstep(-_w, 0., _p.x);
+            float right = 1. - smoothstep(0., _w, _p.x);
+            float stem_shape = left * right;
+            float grow_time = 1. - smoothstep(0., .2, u_stop_time);
+            float stem_top_mask = smoothstep(0., pow(grow_time, .5), .03 -_p.y);
+            stem_shape *= stem_top_mask;
+            stem_shape *= (1. - step(.17, u_stop_time));
+            return stem_shape;
+        }
+        void main() {
+            vec3 base = texture2D(u_texture, vUv).xyz;
+            vec2 uv = vUv;
+            uv.x *= u_ratio;
+            vec2 cursor = vUv - u_cursor.xy;
+            cursor.x *= u_ratio;
+            vec3 stem_color = vec3(.1 + u_stop_randomizer[0] * .6, .6, .2);
+            vec3 flower_color = vec3(.6 + .5 * u_stop_randomizer[1], .1, .9 - .5 * u_stop_randomizer[1]);
+            float angle = .5 * (u_stop_randomizer[0] - .5);
+            float stem_shape = get_stem_shape(cursor, uv, .003, angle);
+            stem_shape += get_stem_shape(cursor + vec2(0., .2 + .5 * u_stop_randomizer[0]), uv, .003, angle);
+            float stem_mask = 1. - get_stem_shape(cursor, uv, .004, angle);
+            stem_mask -= get_stem_shape(cursor + vec2(0., .2 + .5 * u_stop_randomizer[0]), uv, .004, angle);
+            float petals_back_number = 1. + floor(u_stop_randomizer[0] * 2.);
+            float angle_offset = -(2. * step(0., angle) - 1.) * .1 * u_stop_time;
+            float flower_back_shape = get_flower_shape(cursor, petals_back_number, angle + angle_offset, 1.5);
+            float flower_back_mask = 1. - get_flower_shape(cursor, petals_back_number, angle + angle_offset, 1.6);
+            float petals_front_number = 2. + floor(u_stop_randomizer[1] * 2.);
+            float flower_front_shape = get_flower_shape(cursor, petals_front_number, angle, 1.);
+            float flower_front_mask = 1. - get_flower_shape(cursor, petals_front_number, angle, .95);
+            vec3 color = base;
+            color *= stem_mask;
+            color *= flower_back_mask;
+            color *= flower_front_mask;
+            color += (stem_shape * stem_color);
+            color += (flower_back_shape * (flower_color + vec3(0., .8 * u_stop_time, 0.)));
+            color += (flower_front_shape * flower_color);
+            color.r *= 1. - (.5 * flower_back_shape * flower_front_shape);
+            color.b *= 1. - (flower_back_shape * flower_front_shape);
+            color *= u_clean;
+            gl_FragColor = vec4(color, 1.);
+        }
+    </script>
+    <script type="x-shader/x-vertex" id="vertexShader">
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = vec4(position, 1.);
+        }
+    </script>
+
+    <script>
+        const photos = ['photo1.jpg', 'photo2.jpg', 'photo3.jpg', 'photo4.jpg', 'photo5.jpg', 'photo6.jpg', 'photo7.jpg', 'photo8.jpg'];
+        window.isModalOpen = false;
+
+        const reasonsList = [
+            "i love the way your laugh sounds",
+            "i love how much you care about your family",
+            "i love your sleepy voice when you first wake up",
+            "i love playing valorant with you even when we whiff our shots completely",
+            "i love how you always try to fix things for everybody else",
+            "i love the way you say my name",
+            "i love how we can talk through our problems now instead of pulling away",
+            "i love how absolutely beautiful you are inside and out",
+            "i love your smile",
+            "i love that you are my favorite teammate in games and in life",
+            "i love how patient you are with me",
+            "i love how hard you work even when you are exhausted",
+            "i love that i get to build cute web apps just to see you smile",
+            "i love how soft your heart is",
+            "i love the way you look when you are really concentrating on something",
+            "i love how you can make me laugh even when i am having a terrible day",
+            "i love our late night calls",
+            "i love that you are the first person i want to talk to in the morning",
+            "i love that you are the last person i want to talk to before i sleep",
+            "i love the way my heart skips a beat when your name pops up on my phone",
+            "i love how cute you get when you are mad at a video game",
+            "i love your resilience and how you keep going when things get tough",
+            "i love the way you forgive me when i mess up",
+            "i love how safe i feel when i am talking to you",
+            "i love how you listen to me ramble about my coding projects",
+            "i love how you manage to look perfect even when you think you look like a mess",
+            "i love your eyes and how they light up",
+            "i love the random little noises you make when you are focused",
+            "i love how proud i am to call you my girlfriend",
+            "i love how you make the distance feel like nothing when we are on call",
+            "i love the way you hype me up",
+            "i love how stubbornly independent you can be",
+            "i love that you let me take care of you sometimes",
+            "i love your sense of humor",
+            "i love how we can sit in silence on a call and it never feels awkward",
+            "i love the way you steal my heart all over again every single day",
+            "i love how you handle stressful situations with so much grace",
+            "i love how much you love animals",
+            "i love that you are my best friend in the entire world",
+            "i love how you inspire me to be a better man",
+            "i love the cute little selfies you send me",
+            "i love how we can be completely weird together",
+            "i love your music taste",
+            "i love how you try to stay awake for me but end up falling asleep anyway",
+            "i love hearing your breathing when you fall asleep on the phone",
+            "i love how you get excited about the little things",
+            "i love the way your mind works",
+            "i love how you remember small details about me",
+            "i love how you always know exactly what to say to calm me down",
+            "i love that we never give up on each other",
+            "i love how you make my life feel complete",
+            "i love the way you complain when you lose a round in valorant",
+            "i love how you still manage to be sweet when you are annoyed",
+            "i love how much trust we have built together",
+            "i love that you let your walls down for me",
+            "i love the way you tease me",
+            "i love your beautiful face",
+            "i love that you are the only person i want to spend all my time with",
+            "i love how i can be one hundred percent myself around you",
+            "i love your voice notes",
+            "i love how you try to hide your smile when you are trying to be mad at me",
+            "i love the warmth you bring into my life",
+            "i love how you make me feel like i am the only guy in the world",
+            "i love the little inside jokes only we understand",
+            "i love your kind soul",
+            "i love that we can talk about our future together",
+            "i love how you make even the most boring days feel fun",
+            "i love your honesty",
+            "i love how hard you try to take care of everyone including tita",
+            "i love how you make me want to plan out my whole life with you",
+            "i love that you are so incredibly smart",
+            "i love the butterflies i still get when i think about you",
+            "i love how cute you look when you are confused",
+            "i love the way you comfort me",
+            "i love how much you care about us working through our arguments",
+            "i love how you make every distance feel temporary",
+            "i love that you are my ultimate safe space",
+            "i love how you get super competitive when we play games",
+            "i love your courage",
+            "i love the way you say i love you",
+            "i love how you are always trying to learn and grow",
+            "i love that even when we are miles apart you feel so close",
+            "i love how you understand my weird moods",
+            "i love your completely unique personality",
+            "i love how you make me feel understood",
+            "i love that you trust me with your heart",
+            "i love how you never judge me",
+            "i love how you look at the world",
+            "i love how i can literally talk to you for hours and never get bored",
+            "i love the way you make every small moment feel special",
+            "i love your strength when things go wrong",
+            "i love how i always want to share my good news with you first",
+            "i love the way you pout when you dont get your way",
+            "i love how i miss you the second you hang up the phone",
+            "i love how you make me feel unconditionally loved",
+            "i love that you are my person",
+            "i love how i know my heart is safe with you",
+            "i love that you are kyra",
+            "i love everything about you even the things you think are flaws",
+            "i love you because you are exactly who you are and i would choose you every single time"
+        ];
+        let currentReasonIndex = 0;
+        let cakeInitialized = false;
+
+        window.petDog = function() {
+            setTimeout(() => {
+                document.getElementById('landing-screen').classList.remove('active');
+                document.getElementById('landing-screen').classList.add('hide');
+
+                document.getElementById('main-screen').classList.remove('hide');
+                document.getElementById('main-screen').classList.add('active');
+
+                triggerFountain();
+
+                setTimeout(() => {
+                    document.getElementById('birthday-title').classList.add('shrink');
+                    document.getElementById('menu-options').classList.add('show');
+                    window.startFlowerAnimation();
+                }, 2200);
+
+            }, 300);
+        }
+
+        window.goHome = function() {
+            document.getElementById('main-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('hide');
+            
+            document.getElementById('landing-screen').classList.remove('hide');
+            document.getElementById('landing-screen').classList.add('active');
+            
+            document.getElementById('birthday-title').classList.remove('shrink');
+            document.getElementById('menu-options').classList.remove('show');
+            document.getElementById('fountain-container').innerHTML = ''; 
+        }
+
+        function triggerFountain() {
+            const container = document.getElementById('fountain-container');
+            const W = container.clientWidth;
+            const H = container.clientHeight;
+            const rand = (min, max) => Math.random() * (max - min) + min;
+            const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+            const topLimit = 200;
+            const menuTop = document.getElementById('menu-options').getBoundingClientRect().top;
+            const bottomLimit = menuTop - 10;
+            const bandH = Math.max(bottomLimit - topLimit, 120);
+
+            const size = clamp((bandH / 2 - 30) / 1.35, 70, 115);
+            const pw = size + 12, ph = size + 26;
+            const half = 0.55 * Math.hypot(pw, ph);
+            container.style.setProperty('--polaroid-size', size + 'px');
+
+            const cols = 4, rows = 2;
+            const colW = (W * 0.88) / cols;
+            const rowH = bandH / rows;
+            const slots = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cx = W * 0.06 + (c + 0.5) * colW + rand(-0.3, 0.3) * colW;
+                    const cyTop = topLimit + (r + 0.5) * rowH + rand(-0.3, 0.3) * rowH;
+                    slots.push({
+                        x: cx,
+                        y: clamp(cyTop, topLimit + half * 0.6, bottomLimit - half * 0.6)
+                    });
+                }
+            }
+            for (let i = slots.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [slots[i], slots[j]] = [slots[j], slots[i]];
+            }
+
+            photos.forEach((photoSrc, index) => {
+                setTimeout(() => {
+                    const item = document.createElement('div');
+                    item.classList.add('fountain-item', 'polaroid');
+                    
+                    const img = document.createElement('img');
+                    img.src = photoSrc;
+                    item.appendChild(img);
+
+                    const slot = slots[index % slots.length];
+                    const endX = slot.x + 'px';
+                    const endY = (H - slot.y - ph) + 'px';
+
+                    const rotation = rand(-25, 25) + 'deg';
+                    const scale = rand(0.9, 1.1);
+
+                    item.style.setProperty('--final-x', endX);
+                    item.style.setProperty('--final-y', endY);
+                    item.style.setProperty('--final-rot', rotation);
+                    item.style.setProperty('--final-scale', scale);
+                    item.style.setProperty('--final-opacity', '1');
+
+                    container.appendChild(item);
+                }, index * 200); 
+            });
+        }
+
+        window.openSection = function(section) {
+            console.log(section);
+            if(section === 'message') {
+                document.getElementById('message-modal').classList.add('show');
+                window.isModalOpen = true; 
+            } else if(section === 'reasons') {
+                document.getElementById('reasons-modal').classList.add('show');
+                window.isModalOpen = true;
+                currentReasonIndex = 0;
+                document.getElementById('reason-text').innerText = reasonsList[0];
+                document.getElementById('reason-counter').innerText = "1 / 100";
+            } else if(section === 'cake') {
+                document.getElementById('cake-modal').classList.add('show');
+                window.isModalOpen = true;
+                
+                // Reset and start SVG cake animation sequence only on click
+                resetAndStartCake();
+            }
+        }
+
+        const cakeSvgTemplate = document.getElementById('cake').outerHTML;
+        window.cakeBlown = false;
+        let cakeRunId = 0;
+
+        function resetAndStartCake() {
+            const runId = ++cakeRunId;
+            const candlesContainer = document.getElementById('candles');
+            const blowArea = document.getElementById('blowArea');
+            const gifContainer = document.getElementById('gifContainer');
+
+            window.cakeBlown = false;
+            candlesContainer.innerHTML = '';
+            candlesContainer.style.opacity = '0';
+            blowArea.style.pointerEvents = 'none';
+            gifContainer.style.display = 'none';
+            document.getElementById('cake-instructions').textContent = "make a wish and blow the candles!";
+
+            // Recreate candles
+            for (let i = 0; i < 9; i++) {
+                const candle = document.createElement('div');
+                candle.className = 'velas';
+                candle.style.opacity = '0';
+                for (let j = 0; j < 5; j++) {
+                    const flame = document.createElement('div');
+                    flame.className = 'fuego';
+                    candle.appendChild(flame);
+                }
+                candlesContainer.appendChild(candle);
+            }
+
+            // Swap in a fresh copy of the cake SVG so the SMIL animations replay cleanly every time
+            const tmp = document.createElement('div');
+            tmp.innerHTML = cakeSvgTemplate;
+            document.getElementById('cake').replaceWith(tmp.firstElementChild);
+
+            // Start the chain: bizcocho_1 -> relleno_1 -> bizcocho_2 -> relleno_2 -> bizcocho_3 -> crema
+            requestAnimationFrame(() => {
+                if (runId !== cakeRunId) return;
+                const biz1 = document.getElementById('bizcocho_1');
+                if (biz1 && biz1.beginElement) biz1.beginElement();
+            });
+
+            // total cake build time is ~4.6s, then candles pop in
+            setTimeout(() => {
+                if (runId !== cakeRunId) return;
+                candlesContainer.style.opacity = '1';
+                const candles = document.querySelectorAll('.velas');
+                candles.forEach((candle, index) => {
+                    candle.style.animation = 'candle-appear 0.4s ease-out forwards';
+                    candle.style.animationDelay = (index * 0.15) + 's';
+                });
+                setTimeout(() => {
+                    if (runId !== cakeRunId) return;
+                    blowArea.style.pointerEvents = 'auto';
+                }, candles.length * 150 + 400);
+            }, 4700);
+        }
+
+        window.closeModal = function(modalId, event) {
+            if(event) event.stopPropagation();
+            document.getElementById(modalId).classList.remove('show');
+            window.isModalOpen = false; 
+        }
+        
+        window.nextReason = function(event) {
+            if(event) event.stopPropagation();
+            currentReasonIndex++;
+            if (currentReasonIndex >= reasonsList.length) {
+                currentReasonIndex = 0; 
+            }
+            const textEl = document.getElementById('reason-text');
+            textEl.innerText = reasonsList[currentReasonIndex];
+            document.getElementById('reason-counter').innerText = (currentReasonIndex + 1) + " / " + reasonsList.length;
+            
+            textEl.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                textEl.style.transform = 'scale(1)';
+            }, 50);
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('message-modal').addEventListener('click', function(e) {
+            if (e.target === this) { window.closeModal('message-modal'); }
+        });
+        document.getElementById('reasons-modal').addEventListener('click', function(e) {
+            if (e.target === this) { window.closeModal('reasons-modal'); }
+        });
+        document.getElementById('cake-modal').addEventListener('click', function(e) {
+            if (e.target === this) { window.closeModal('cake-modal'); }
+        });
+
+        // CAKE & CANDLE LOGIC
+        window.addEventListener('load', () => {
+            const blowArea = document.getElementById('blowArea');
+            const totalCandles = 9;
+
+            function blowCandles(e) {
+                if(e) e.stopPropagation();
+                if (window.cakeBlown) return;
+                window.cakeBlown = true;
+
+                blowArea.style.pointerEvents = 'none';
+                const candles = document.querySelectorAll('.velas');
+
+                candles.forEach((candle, candleIndex) => {
+                    const flames = candle.querySelectorAll('.fuego');
+                    setTimeout(() => {
+                        flames.forEach(flame => {
+                            flame.style.animation = 'flicker 0.2s 2 alternate';
+                        });
+                        setTimeout(() => {
+                            flames.forEach(flame => {
+                                flame.style.opacity = '0';
+                                flame.style.transform = 'scale(0)';
+                                flame.style.transition = 'all 0.1s ease-out';
+                            });
+                        }, 400);
+                    }, candleIndex * 50); 
+                });
+
+                setTimeout(createCakeConfetti, candles.length * 80 + 500);
+                setTimeout(() => {
+                    document.getElementById('cake-instructions').textContent = "now your wish will come true bubba!";
+                }, candles.length * 80 + 300);
+            }
+
+            blowArea.addEventListener('click', blowCandles);
+            blowArea.addEventListener('touchstart', blowCandles);
+
+            function createCakeConfetti() {
+                const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#ff8800', '#ff0088', '#8800ff'];
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'cake-confetti';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.width = (Math.random() * 10 + 5) + 'px';
+                    confetti.style.height = (Math.random() * 10 + 5) + 'px';
+                    confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+                    confetti.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => { confetti.remove(); }, 3000);
+                }
+                const runId = cakeRunId;
+                setTimeout(() => {
+                    if (runId === cakeRunId && window.cakeBlown) {
+                        document.getElementById('gifContainer').style.display = 'block';
+                    }
+                }, 3000);
+            }
+        });
+
+        // Background Flower Gen Setup
+        window.startFlowerAnimation = function() {
+            if (typeof anime === 'undefined') return;
+            const path = anime.path('#path');
+            const timeline = anime.timeline({
+                easing: 'easeInOutExpo',
+                duration: 1000,
+                complete: () => {
+                    anime({
+                        targets: '.leaf', rotate: 40, duration: 3000, loop: true, direction: 'alternate', easing: 'easeInOutQuad'
+                    });
+                    anime({
+                        targets: '.petals', scale: 1.05, duration: 6000, loop: true, direction: 'alternate', easing: 'easeInOutQuad'
+                    });
+                }
+            });
+            timeline.add({ targets: '.stem', scale: [0, 1] });
+            timeline.add({ targets: '.leaf', rotate: [0, 45] });
+            timeline.add({ targets: '.petals', scale: [0, 1] }, '-=1000');
+            timeline.add({ targets: '#bee', opacity: [0, 1] }, '-=750');
+            anime({
+                targets: '#bee', translateX: path('x'), translateY: path('y'), rotate: path('angle'), loop: true, duration: 12500, easing: 'linear'
+            });
+        }
+
+        const canvasEl = document.querySelector("#canvas");
+        const pointer = { x: .66, y: .3, clicked: true };
+
+        window.setTimeout(() => { pointer.x = .75; pointer.y = .5; pointer.clicked = true; }, 700);
+
+        let basicMaterial, shaderMaterial;
+        let renderer = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: true });
+        let sceneShader = new THREE.Scene();
+        let sceneBasic = new THREE.Scene();
+        let camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+        let clock = new THREE.Clock();
+        let renderTargets = [ new THREE.WebGLRenderTarget(1, 1), new THREE.WebGLRenderTarget(1, 1) ];
+
+        createPlane();
+        updateSize();
+
+        window.addEventListener("resize", () => {
+            updateSize();
+            pointer.vanishCanvas = true;
+            setTimeout(() => { pointer.vanishCanvas = false; }, 50);
+        });
+
+        render();
+
+        let isTouchScreen = false;
+        window.addEventListener("click", e => {
+            if (window.isModalOpen) return; 
+            if (!isTouchScreen) {
+                pointer.x = e.pageX / window.innerWidth;
+                pointer.y = e.pageY / window.innerHeight;
+                pointer.clicked = true;     
+            }
+        });
+        window.addEventListener("touchstart", e => {
+            if (window.isModalOpen) return; 
+            isTouchScreen = true;
+            pointer.x = e.targetTouches[0].pageX / window.innerWidth;
+            pointer.y = e.targetTouches[0].pageY / window.innerHeight;
+            pointer.clicked = true;
+        });
+
+        function createPlane() {
+            shaderMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    u_stop_time: {type: "f", value: 0.},
+                    u_stop_randomizer: {type: "v2", value: new THREE.Vector2(Math.random(), Math.random())},
+                    u_cursor: {type: "v2", value: new THREE.Vector2(pointer.x, pointer.y)},
+                    u_ratio: {type: "f", value: window.innerWidth / window.innerHeight},
+                    u_texture: {type: "t", value: null},
+                    u_clean: {type: "f", value: 1.},
+                },
+                vertexShader: document.getElementById("vertexShader").textContent,
+                fragmentShader: document.getElementById("fragmentShader").textContent
+            });
+            basicMaterial = new THREE.MeshBasicMaterial();
+            const planeGeometry = new THREE.PlaneGeometry(2, 2);
+            sceneBasic.add(new THREE.Mesh(planeGeometry, basicMaterial));
+            sceneShader.add(new THREE.Mesh(planeGeometry, shaderMaterial));
+        }
+
+        function render() {
+            shaderMaterial.uniforms.u_clean.value = pointer.vanishCanvas ? 0 : 1;
+            shaderMaterial.uniforms.u_texture.value = renderTargets[0].texture;
+
+            if (pointer.clicked) {
+                shaderMaterial.uniforms.u_cursor.value = new THREE.Vector2(pointer.x, 1 - pointer.y);
+                shaderMaterial.uniforms.u_stop_randomizer.value = new THREE.Vector2(Math.random(), Math.random());
+                shaderMaterial.uniforms.u_stop_time.value = 0.;
+                pointer.clicked = false;
+            }
+            shaderMaterial.uniforms.u_stop_time.value += clock.getDelta();
+
+            renderer.setRenderTarget(renderTargets[1]);
+            renderer.render(sceneShader, camera);
+            basicMaterial.map = renderTargets[1].texture;
+            renderer.setRenderTarget(null);
+            renderer.render(sceneBasic, camera);
+
+            let tmp = renderTargets[0];
+            renderTargets[0] = renderTargets[1];
+            renderTargets[1] = tmp;
+
+            requestAnimationFrame(render);
+        }
+
+        function updateSize() {
+            shaderMaterial.uniforms.u_ratio.value = window.innerWidth / window.innerHeight;
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            const pixelRatio = renderer.getPixelRatio();
+            const width = Math.round(window.innerWidth * pixelRatio);
+            const height = Math.round(window.innerHeight * pixelRatio);
+            renderTargets[0].setSize(width, height);
+            renderTargets[1].setSize(width, height);
+        }
+    </script>
+    <script>
+    let nouvelle, ancienne, pression;
+    let themeCouleur = [ '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722' ];
+    
+    class Particule {
+        constructor(parent) {
+            this.parent = parent;
+            this.gravite = parent.gravite;
+            this.reinit();
+            this.forme = round(random(0, 1));
+            this.etape = 0;
+            this.prise = 0;
+            this.priseFacteur = random(-0.02, 0.02);
+            this.multFacteur = random(0.01, 0.08);
+            this.priseAngle = 0;
+            this.priseVitesse = 0.05;
+        }
+        reinit() {
+            this.position = this.parent.position.copy();
+            this.position.y = random(-20, -100);
+            this.position.x = random(0, width);
+            this.velocite = createVector(random(-6, 6), random(-10, 2));
+            this.friction = random(0.995, 0.98);
+            this.taille = round(random(5, 15));
+            this.moitie = this.taille / 2;
+            this.couleur = color(random(themeCouleur));
+        }
+        dessiner() {
+            this.etape = 0.5 + Math.sin(this.velocite.y * 20) * 0.5;
+            this.prise = this.priseFacteur + Math.cos(this.priseAngle) * this.multFacteur;
+            this.priseAngle += this.priseVitesse;
+            translate(this.position.x, this.position.y);
+            rotate(this.velocite.x * 2);
+            scale(1, this.etape);
+            noStroke();
+            fill(this.couleur);
+            if (this.forme === 0) {
+                rect(-this.moitie, -this.moitie, this.taille, this.taille);
+            } else {
+                ellipse(0, 0, this.taille, this.taille);
+            }
+            resetMatrix();
+        }
+        integration() {
+            this.velocite.add(this.gravite);
+            this.velocite.x += this.prise;
+            this.velocite.mult(this.friction);
+            this.position.add(this.velocite);
+            if (this.position.y > height) { this.reinit(); }
+            if (this.position.x < 0) { this.reinit(); }
+            if (this.position.x > width + 10) { this.reinit(); }
+        }
+        rendu() {
+            this.integration();
+            this.dessiner();
+        }
+    }
+
+    class SystemeDeParticules {
+        constructor(nombreMax, position, gravite) {
+            this.position = position.copy();
+            this.nombreMax = nombreMax;
+            this.gravite = createVector(0, 0.1);
+            this.friction = 0.98;
+            this.particules = [];
+            for (var i = 0; i < this.nombreMax; i++) {
+                this.particules.push(new Particule(this));
+            }
+        }
+        rendu() {
+            if (pression) {
+                var force = p5.Vector.sub(nouvelle, ancienne);
+                this.gravite.x = force.x / 20;
+                this.gravite.y = force.y / 20;
+            }
+            this.particules.forEach(particules => particules.rendu());
+        }
+    }
+
+    let confettis;
+
+    function setup() {
+        createCanvas(windowWidth, windowHeight);
+        frameRate(60);
+        ancienne = createVector(0, 0);
+        nouvelle = createVector(0, 0);
+        confettis = new SystemeDeParticules(500, createVector(width / 2, -20));
+    }
+
+    function draw() {
+        clear(); 
+        nouvelle.x = mouseX;
+        nouvelle.y = mouseY;
+        confettis.rendu();
+        ancienne.x = nouvelle.x;
+        ancienne.y = nouvelle.y;
+    }
+
+    function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        confettis.position = createVector(width / 2, -40);
+    }
+
+    function mousePressed() {
+        next = 0;
+        pression = true;
+    }
+
+    function mouseReleased() {
+        pression = false;
+        confettis.gravite.y = 0.1;
+        confettis.gravite.x = 0;
+    }
+
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const c = document.querySelector('canvas.p5Canvas');
+            if (c) c.style.opacity = 0;                 
+            setTimeout(() => { if (typeof remove === 'function') remove(); }, 1000); 
+        }, 4000);
+    });
+
+    document.getElementById('dog').addEventListener('click', e => {
+        document.getElementById('dog').classList.add('petted');
+        const h = document.createElement('div');
+        h.className = 'pet-heart';
+        h.textContent = '\u2764\uFE0F';
+        h.style.left = (e.clientX - 12) + 'px';
+        h.style.top = (e.clientY - 20) + 'px';
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 1200);
+    });
+    </script>
+</body>
+</html>
